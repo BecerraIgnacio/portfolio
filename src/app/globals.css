@@ -1,0 +1,72 @@
+:root {
+  --bg: #060608;
+  --surface: #0c0c0f;
+  --surface-raised: #111115;
+  --border: #1a1a20;
+  --border-hover: #2a2a32;
+  --fg: #ededed;
+  --fg-muted: #888;
+  --fg-dim: #555;
+  --accent: #fff;
+  --amber: #E8A838;
+  --amber-dim: #E8A83815;
+  --green: #00d47b;
+  --green-dim: #00d47b15;
+  --blue: #0091ff;
+  --blue-dim: #0091ff12;
+  --purple: #7c5cff;
+  --purple-dim: #7c5cff12;
+  --orange: #ff6b2b;
+  --orange-dim: #ff6b2b12;
+  --spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 56px; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Factory floor grid */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.025) 1px, transparent 0);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Noise overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Reveal animations */
+.reveal {
+  opacity: 0; transform: translateY(16px);
+  transition: opacity 0.7s var(--spring), transform 0.7s var(--spring);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Keyframes */
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(5px); }
+}
+@keyframes belt-move { to { background-position: 17px 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }

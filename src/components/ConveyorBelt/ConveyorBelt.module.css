@@ -1,0 +1,18 @@
+.track {
+  overflow: hidden;
+  padding: 8px 0 0;
+  cursor: grab;
+}
+
+.packages {
+  display: flex;
+  gap: 18px;
+  padding: 8px 24px 32px;
+  position: relative;
+  width: max-content;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .packages { padding: 8px 16px 28px; }
+}

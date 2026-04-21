@@ -1,0 +1,48 @@
+.about {
+  max-width: 1100px; margin: 0 auto;
+  padding: 24px 24px;
+  position: relative; z-index: 1;
+}
+.header { margin-bottom: 48px; }
+.label {
+  font-family: var(--font-mono); font-size: 0.68rem;
+  color: var(--amber); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 12px;
+}
+.title {
+  font-size: clamp(1.4rem, 2.8vw, 2rem);
+  font-weight: 700; letter-spacing: -0.03em;
+  color: var(--accent);
+}
+
+.grid {
+  display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 56px;
+}
+.text p {
+  font-size: 0.9rem; color: var(--fg-muted);
+  margin-bottom: 16px; line-height: 1.75;
+}
+.text strong { color: var(--fg); font-weight: 500; }
+
+.infoList { list-style: none; }
+.infoList li:first-child { border-top: 1px solid var(--border); }
+.infoList li {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.infoLabel {
+  font-family: var(--font-mono); font-size: 0.66rem;
+  color: var(--fg-dim); text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.infoValue { font-size: 0.84rem; color: var(--fg); text-align: right; }
+.infoValue a {
+  color: var(--fg); text-decoration: none; transition: color 0.2s;
+}
+.infoValue a:hover { color: var(--amber); }
+
+@media (max-width: 768px) {
+  .about { padding: 24px 16px; }
+  .grid { grid-template-columns: 1fr; gap: 32px; }
+}
