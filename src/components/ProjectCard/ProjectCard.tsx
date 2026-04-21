@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import type { Project } from "@/types/project";
 import styles from "./ProjectCard.module.css";
 
@@ -10,18 +11,32 @@ const stampLabels: Record<string, string> = {
   paused: "PAUSED",
 };
 
+const DRAG_THRESHOLD = 5;
+
 export default function ProjectCard({ project }: { project: Project }) {
   const isWip = project.status === "build";
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+  };
 
   const handleClick = (e: React.MouseEvent) => {
     if (!project.href) return;
     if ((e.target as HTMLElement).closest(`.${styles.links}`)) return;
+    // Ignore if this was a drag
+    if (pointerStart.current) {
+      const dx = Math.abs(e.clientX - pointerStart.current.x);
+      const dy = Math.abs(e.clientY - pointerStart.current.y);
+      if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) return;
+    }
     window.open(project.href, "_blank");
   };
 
   return (
     <article
       className={`${styles.card} ${isWip ? styles.wip : ""}`}
+      onPointerDown={handlePointerDown}
       onClick={project.href ? handleClick : undefined}
       style={{ cursor: project.href ? "pointer" : "default" }}
     >
