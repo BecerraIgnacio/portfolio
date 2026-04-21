@@ -4,6 +4,8 @@ import { useRef, useEffect, useCallback, type ReactNode } from "react";
 import styles from "./ConveyorBelt.module.css";
 
 const EASE_DURATION = 800;
+const FRICTION = 0.95;
+const MIN_VELOCITY = 0.1;
 
 function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -29,6 +31,10 @@ export default function ConveyorBelt({
     isDragging: boolean;
     dragStartX: number;
     dragStartOffset: number;
+    dragVelocity: number;
+    lastDragX: number;
+    lastDragTime: number;
+    isMomentum: boolean;
   }>({
     offset: 0,
     currentSpeed: speed,
@@ -40,7 +46,18 @@ export default function ConveyorBelt({
     isDragging: false,
     dragStartX: 0,
     dragStartOffset: 0,
+    dragVelocity: 0,
+    lastDragX: 0,
+    lastDragTime: 0,
+    isMomentum: false,
   });
+
+  const wrapOffset = (offset: number, half: number): number => {
+    if (half <= 0) return offset;
+    // Normalize offset into [-halfWidth, 0) range
+    const mod = ((offset % half) + half) % half;
+    return mod - half;
+  };
 
   const tick = useCallback(
     (now: number) => {
@@ -48,24 +65,33 @@ export default function ConveyorBelt({
       const belt = beltRef.current;
       if (!belt) return;
 
-      // Ease between speeds
-      if (state.easeStart !== null) {
-        const elapsed = now - state.easeStart;
-        const t = Math.min(elapsed / EASE_DURATION, 1);
-        state.currentSpeed =
-          state.easeFrom +
-          (state.targetSpeed - state.easeFrom) * easeInOutCubic(t);
-        if (t >= 1) state.easeStart = null;
-      }
+      if (state.isMomentum) {
+        // Apply drag momentum with friction
+        state.offset += state.dragVelocity;
+        state.dragVelocity *= FRICTION;
 
-      // Don't auto-scroll while dragging
-      if (!state.isDragging) {
+        if (Math.abs(state.dragVelocity) < MIN_VELOCITY) {
+          state.isMomentum = false;
+          // Ease back to belt speed
+          state.easeFrom = 0;
+          state.targetSpeed = speed;
+          state.easeStart = performance.now();
+        }
+      } else if (!state.isDragging) {
+        // Ease between speeds
+        if (state.easeStart !== null) {
+          const elapsed = now - state.easeStart;
+          const t = Math.min(elapsed / EASE_DURATION, 1);
+          state.currentSpeed =
+            state.easeFrom +
+            (state.targetSpeed - state.easeFrom) * easeInOutCubic(t);
+          if (t >= 1) state.easeStart = null;
+        }
         state.offset -= state.currentSpeed;
       }
 
-      if (state.halfWidth > 0 && Math.abs(state.offset) >= state.halfWidth) {
-        state.offset += state.halfWidth;
-      }
+      // Wrap in both directions
+      state.offset = wrapOffset(state.offset, state.halfWidth);
 
       belt.style.transform = `translateX(${state.offset}px)`;
       state.rafId = requestAnimationFrame(tick);
@@ -78,7 +104,6 @@ export default function ConveyorBelt({
     const track = trackRef.current;
     if (!belt || !track) return;
 
-    // Measure half width after DOM paint
     const measureWidth = () => {
       animRef.current.halfWidth = belt.scrollWidth / 2;
     };
@@ -87,15 +112,15 @@ export default function ConveyorBelt({
 
     // Hover handlers
     const onEnter = () => {
-      if (animRef.current.isDragging) return;
       const s = animRef.current;
+      if (s.isDragging || s.isMomentum) return;
       s.easeFrom = s.currentSpeed;
       s.targetSpeed = 0;
       s.easeStart = performance.now();
     };
     const onLeave = () => {
-      if (animRef.current.isDragging) return;
       const s = animRef.current;
+      if (s.isDragging || s.isMomentum) return;
       s.easeFrom = s.currentSpeed;
       s.targetSpeed = speed;
       s.easeStart = performance.now();
@@ -106,8 +131,12 @@ export default function ConveyorBelt({
       if ((e.target as HTMLElement).closest("a")) return;
       const s = animRef.current;
       s.isDragging = true;
+      s.isMomentum = false;
       s.dragStartX = e.pageX;
       s.dragStartOffset = s.offset;
+      s.dragVelocity = 0;
+      s.lastDragX = e.pageX;
+      s.lastDragTime = performance.now();
       s.currentSpeed = 0;
       s.targetSpeed = 0;
       s.easeStart = null;
@@ -117,6 +146,15 @@ export default function ConveyorBelt({
       const s = animRef.current;
       if (!s.isDragging) return;
       e.preventDefault();
+
+      const now = performance.now();
+      const dt = now - s.lastDragTime;
+      if (dt > 0) {
+        s.dragVelocity = (e.pageX - s.lastDragX) / Math.max(dt, 8) * 16;
+      }
+      s.lastDragX = e.pageX;
+      s.lastDragTime = now;
+
       const dx = e.pageX - s.dragStartX;
       s.offset = s.dragStartOffset + dx;
     };
@@ -125,10 +163,16 @@ export default function ConveyorBelt({
       if (!s.isDragging) return;
       s.isDragging = false;
       track.style.cursor = "";
-      // Resume belt
-      s.easeFrom = 0;
-      s.targetSpeed = speed;
-      s.easeStart = performance.now();
+
+      // If there's meaningful velocity, start momentum phase
+      if (Math.abs(s.dragVelocity) > MIN_VELOCITY) {
+        s.isMomentum = true;
+      } else {
+        // No momentum — ease back to belt speed
+        s.easeFrom = 0;
+        s.targetSpeed = speed;
+        s.easeStart = performance.now();
+      }
     };
 
     track.addEventListener("mouseenter", onEnter);
@@ -137,7 +181,6 @@ export default function ConveyorBelt({
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
 
-    // Start animation
     animRef.current.rafId = requestAnimationFrame(tick);
 
     return () => {

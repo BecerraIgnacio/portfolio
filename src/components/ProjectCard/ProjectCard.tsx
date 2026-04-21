@@ -49,8 +49,9 @@ export default function ProjectCard({ project }: { project: Project }) {
           </span>
         </div>
         <div className={styles.descWrap}>
-          <p className={styles.desc}>{project.description}</p>
-          {isWip && <div className={styles.descBlur} />}
+          <p className={`${styles.desc} ${isWip ? styles.descRedacted : ""}`}>
+            {project.description}
+          </p>
         </div>
         <span className={styles.stack}>{project.stack}</span>
         <div className={styles.links}>

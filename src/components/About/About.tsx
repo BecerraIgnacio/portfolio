@@ -15,7 +15,8 @@ export default function About() {
         <ScrollReveal>
           <div className={styles.text}>
             <p>I build <strong>AI agents</strong> and the systems around them. My work spans applied AI — from protein discovery engines and veterinary surveillance to Claude Code ecosystems and multi-agent architectures. Currently all-in on agents.</p>
-            <p>By day I&apos;m a software developer at <strong>Exolgan</strong>, one of Argentina&apos;s largest shipping container terminals, building microservices and IoT systems where all IT is developed in-house. My final college project is designing <strong>AI agent infrastructure</strong> for FIE&apos;s Centenario project — modernizing the university for its 100th anniversary.</p>
+            <p>By day I&apos;m a software developer at <strong>Exolgan</strong>, one of Argentina&apos;s largest shipping container terminals, building microservices and IoT systems where all IT is developed in-house.</p>
+            <p>My final college project is designing <strong>AI agent infrastructure</strong> for FIE&apos;s Centenario project — modernizing the university for its 100th anniversary.</p>
             <p>Selected as one of 5 <strong>AI Fellows</strong> by Crecimiento, Argentina&apos;s largest tech community working to turn the country into a tech hub. The fellowship means cowork access, weekly programming sessions, exclusive dinners, and personalized support for 3 months.</p>
             <p>Before this: <strong>1st place</strong> at the 2019 Programming Olympiad (UNCo), Cambridge <strong>C1 Advanced</strong>, and a background in <strong>electronics, automation, and industrial control</strong>. I also teach Python, C, and C++ to university students.</p>
           </div>

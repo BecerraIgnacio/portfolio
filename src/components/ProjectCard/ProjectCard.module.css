@@ -92,11 +92,9 @@
   font-size: 0.76rem; color: var(--fg-muted);
   line-height: 1.6;
 }
-.descBlur {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 100%;
-  background: linear-gradient(to bottom, transparent 20%, var(--surface) 90%);
-  pointer-events: none;
+.descRedacted {
+  filter: blur(4px);
+  user-select: none;
 }
 
 .stack {
