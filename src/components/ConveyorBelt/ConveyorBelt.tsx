@@ -126,60 +126,78 @@ export default function ConveyorBelt({
       s.easeStart = performance.now();
     };
 
-    // Drag handlers
-    const onMouseDown = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).closest("a")) return;
+    // Shared drag logic
+    const startDrag = (pageX: number, target: HTMLElement) => {
+      if (target.closest("a")) return;
       const s = animRef.current;
       s.isDragging = true;
       s.isMomentum = false;
-      s.dragStartX = e.pageX;
+      s.dragStartX = pageX;
       s.dragStartOffset = s.offset;
       s.dragVelocity = 0;
-      s.lastDragX = e.pageX;
+      s.lastDragX = pageX;
       s.lastDragTime = performance.now();
       s.currentSpeed = 0;
       s.targetSpeed = 0;
       s.easeStart = null;
-      track.style.cursor = "grabbing";
     };
-    const onMouseMove = (e: MouseEvent) => {
+    const moveDrag = (pageX: number) => {
       const s = animRef.current;
       if (!s.isDragging) return;
-      e.preventDefault();
-
       const now = performance.now();
       const dt = now - s.lastDragTime;
       if (dt > 0) {
-        s.dragVelocity = (e.pageX - s.lastDragX) / Math.max(dt, 8) * 16;
+        s.dragVelocity = (pageX - s.lastDragX) / Math.max(dt, 8) * 16;
       }
-      s.lastDragX = e.pageX;
+      s.lastDragX = pageX;
       s.lastDragTime = now;
-
-      const dx = e.pageX - s.dragStartX;
-      s.offset = s.dragStartOffset + dx;
+      s.offset = s.dragStartOffset + (pageX - s.dragStartX);
     };
-    const onMouseUp = () => {
+    const endDrag = () => {
       const s = animRef.current;
       if (!s.isDragging) return;
       s.isDragging = false;
       track.style.cursor = "";
-
-      // If there's meaningful velocity, start momentum phase
       if (Math.abs(s.dragVelocity) > MIN_VELOCITY) {
         s.isMomentum = true;
       } else {
-        // No momentum — ease back to belt speed
         s.easeFrom = 0;
         s.targetSpeed = speed;
         s.easeStart = performance.now();
       }
     };
 
+    // Mouse handlers
+    const onMouseDown = (e: MouseEvent) => {
+      startDrag(e.pageX, e.target as HTMLElement);
+      track.style.cursor = "grabbing";
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!animRef.current.isDragging) return;
+      e.preventDefault();
+      moveDrag(e.pageX);
+    };
+    const onMouseUp = () => endDrag();
+
+    // Touch handlers
+    const onTouchStart = (e: TouchEvent) => {
+      startDrag(e.touches[0].pageX, e.target as HTMLElement);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!animRef.current.isDragging) return;
+      e.preventDefault();
+      moveDrag(e.touches[0].pageX);
+    };
+    const onTouchEnd = () => endDrag();
+
     track.addEventListener("mouseenter", onEnter);
     track.addEventListener("mouseleave", onLeave);
     track.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
+    track.addEventListener("touchstart", onTouchStart, { passive: false });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
 
     animRef.current.rafId = requestAnimationFrame(tick);
 
@@ -191,6 +209,9 @@ export default function ConveyorBelt({
       track.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
+      track.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
     };
   }, [speed, tick]);
 
